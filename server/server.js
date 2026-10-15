@@ -58,7 +58,20 @@ function disconnectPlayer(ws){unqueue(ws);const room=stateOf(ws);if(!room)return
  clearTimeout(room.disconnectTimer);room.disconnectTimer=setTimeout(()=>{if(!room.done&&side.disconnectedAt)finishRoom(room,room.sides.indexOf(side))},15000);
 }
 function startCountdown(room){room.phase='countdown';room.startedAt=Date.now()+3500;notify(room,{type:'match_countdown',started_at:room.startedAt,duration_ms:room.durationMs});room.timer=setTimeout(()=>{if(room.done)return;room.phase='running';notify(room,{type:'match_started',started_at:room.startedAt,duration_ms:room.durationMs});room.timer=setTimeout(()=>finishRoom(room),room.durationMs)},3500)}
+// Detect terminated apps even if TCP never reports a clean close.
+// A screen-off phone with a healthy WebSocket remains connected.
+const heartbeat = setInterval(() => {
+  for (const ws of wss.clients) {
+    if (ws.readyState !== WebSocket.OPEN) continue;
+    if (ws.isAlive === false) { ws.terminate(); continue; }
+    ws.isAlive = false;
+    try { ws.ping(); } catch (_) { ws.terminate(); }
+  }
+}, 10000);
+wss.on('close', () => clearInterval(heartbeat));
 wss.on('connection',ws=>{
+  ws.isAlive = true;
+  ws.on('pong', () => { ws.isAlive = true; });
   const id=randomUUID();players.set(ws,{id,room:null,lastUpdate:0});
   send(ws,{type:'server_info',message:'Running Arena 서버 연결 완료'});
   ws.on('message',async raw=>{
