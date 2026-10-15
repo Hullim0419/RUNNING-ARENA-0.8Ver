@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
+<meta content="#0b0f0d" name="theme-color"/>
+<title>Running Arena</title>
+<link href="style.css" rel="stylesheet"/>
+</head>
+<body>
+<header><div class="logo"><img src="main_logo.png" alt="Running Arena 로고"/></div><div class="pill">BETA · ARENA</div></header>
+<main><footer>RUNNING ARENA · STUDENT PROJECT PROTOTYPE<br/>기록은 계정 로그인 시 서버에도 저장됩니다. 경로 공유는 선택 사항입니다.</footer>
+<div class="screen" id="screen-auth">
+  <div class="auth-landing" id="authLanding">
+    <div class="auth-brand"><img src="main_logo.png" alt="Running Arena 로고"/><div>RUNNING ARENA</div></div>
+    <div class="auth-tagline">YOUR NEXT<br/>RIVAL AWAITS.</div>
+    <div class="auth-actions">
+      <button type="button" class="social kakao" id="kakaoLogin" disabled aria-label="카카오 로그인 미구현"><img src="kakao_icon.png" alt=""/>카카오로 로그인 <span class="sr-only">미구현</span></button>
+      <button type="button" class="social google" id="googleLogin" disabled aria-label="구글 로그인 미구현"><img src="google_icon.png" alt=""/>Google로 로그인 <span class="sr-only">미구현</span></button>
+      <button type="button" class="auth-enter" id="authEnter">로그인/회원가입</button>
+      <button type="button" class="auth-server-link" id="authSettings">서버설정</button>
+    </div>
+  </div>
+  <section class="card hidden" id="accountCard">
+    <div class="section-head"><strong>Running Arena 계정</strong><span class="small">ACCOUNT</span></div>
+    <div id="guestPanel"><div class="auth-tabs"><button class="auth-tab selected" id="loginTab" type="button">로그인</button><button class="auth-tab" id="registerTab" type="button">회원가입</button></div>
+      <form autocomplete="on" id="authForm">
+        <label for="accountName">아이디 (영문·숫자·밑줄, 3~20자)</label><input autocomplete="username" id="accountName" maxlength="20" minlength="3" name="username" placeholder="runner123" required/>
+        <label for="accountPassword">비밀번호 (8자 이상)</label><input autocomplete="current-password" id="accountPassword" maxlength="128" minlength="8" name="password" placeholder="비밀번호" required type="password"/>
+        <div class="hidden" id="confirmGroup"><label for="accountConfirm">비밀번호 확인</label><input autocomplete="new-password" id="accountConfirm" placeholder="비밀번호 다시 입력" type="password"/></div>
+        <button class="btn" id="authSubmit" type="submit">Running Arena 로그인</button>
+      </form>
+    </div>
+    <div class="hidden" id="userPanel"><div class="matchrow"><div class="avatar">👤</div><div class="matchtext"><b id="signedInName">Runner</b><div>서버에 로그인된 계정</div></div><span class="tag">ONLINE</span></div><button class="btn secondary" id="logoutBtn" type="button">로그아웃</button></div>
+    <div aria-live="polite" class="notice" id="authMessage" role="status">아이디와 비밀번호로 로그인하세요.</div>
+    <div class="screen-nav"><button class="btn secondary" id="guestEnter" type="button">게스트로 시작하기</button><button class="btn secondary" id="authBack" type="button">로그인 첫 화면으로</button></div>
+  </section>
+</div>
+<div class="screen hidden" id="screen-auth-server"><h1>서버 설정</h1><section class="card"><label for="authServerUrl">서버 WebSocket 주소</label><input id="authServerUrl" autocomplete="off" placeholder="ws://192.168.0.10:3000"/><div class="btnrow"><button class="btn secondary" type="button" id="authSaveServer">주소 저장</button><button class="btn secondary" type="button" id="authTestServer">연결 테스트</button></div><div id="authServerStatus" class="notice" role="status">서버 주소를 입력하세요.</div></section><div class="screen-nav"><button class="btn secondary" type="button" id="authServerBack">로그인 화면으로</button></div></div>
+<div class="screen hidden" id="screen-lobby"><div class="lobby-hero"><div class="eyebrow">MATCH LOBBY</div><h1>FIND YOUR<br/><em>NEXT RIVAL.</em></h1><p class="sub" id="lobbyGreeting">경기 모드를 선택하고 매칭을 시작하세요.</p></div><section class="card">
+<div class="section-head"><strong>01 / 경기 모드</strong><span class="small">MODE SELECT</span></div>
+<div class="modes">
+<button class="mode active" data-mode="1대1"><span class="ico"><img src="1v1_icon.png" alt="두 명의 러너"/></span><b>1 대 1</b><small>DUEL</small></button>
+<button class="mode" data-mode="팀전" disabled aria-disabled="true"><span class="mode-unavailable">미구현</span><b>팀전</b><small>TEAM RACE</small></button>
+<button class="mode" data-mode="배틀로얄" disabled aria-disabled="true"><span class="mode-unavailable">미구현</span><b>배틀로얄</b><small>LAST RUNNER</small></button>
+</div>
+<div class="notice">서버가 꺼져 있어도 GPS 러닝과 기록 저장은 작동합니다. 온라인 매칭만 서버가 필요합니다.</div>
+<button class="btn" id="matchBtn">온라인 매칭</button>
+<div class="status"><span class="dot" id="netDot"></span><span id="netStatus">서버 미설정 · 매칭 불가</span></div>
+<div class="notice" id="matchMessage">서버가 연결되지 않았습니다. 다른 기능은 정상 이용 가능합니다.</div>
+</section><div class="screen-nav"><button class="btn secondary" id="practiceBtn" type="button">혼자 연습하기</button></div></div>
+<div class="hidden" aria-hidden="true"><button id="openSettings"></button><button id="openRecords"></button><button id="openProfile"></button><button id="openRules"></button><button id="lobbyLogout"></button></div><div class="screen hidden" id="screen-game"><div class="live-map-wrap"><div id="liveMap" class="arena-map"></div><div class="map-hint" id="mapHint">GPS 연결 시 경로가 지도에 표시됩니다.</div></div><div class="eyebrow" id="gameEyebrow">LIVE RUNNING</div><h1>KEEP<br/><em>RUNNING.</em></h1><p class="sub" id="gameCaption">러닝을 시작하고 기록을 측정하세요.</p><div class="rival-board"><div>나 <b id="liveMyScore">0 pts</b></div><span>VS</span><div>상대 <b id="liveOpponentScore">대기</b></div></div><section class="card">
+<div class="section-head"><strong>02 / 라이브 러닝</strong><span class="small" id="runState">READY</span></div>
+<div class="notice" id="gameLimit">연습 모드</div><div class="grid">
+<div class="stat"><div class="label">DISTANCE · 이동거리</div><div class="value" id="distance">0.00 <span class="unit">km</span></div></div>
+<div class="stat"><div class="label">TIME · 경과시간</div><div class="value" id="elapsed">00:00 <span class="unit">min</span></div></div>
+<div class="stat"><div class="label">AVG SPEED · 평균속도</div><div class="value" id="speed">0.0 <span class="unit">km/h</span></div></div>
+<div class="stat"><div class="label">ARENA SCORE · 점수</div><div class="value" id="score">0 <span class="unit">pts</span></div></div>
+</div>
+<div class="status"><span class="dot" id="gpsDot"></span><span id="gpsStatus">GPS 대기 중 · 위치 권한이 필요합니다.</span></div>
+<div class="split-panel"><div class="section-head"><strong>구간 기록 · 1km SPLITS</strong></div><div id="liveSplits" class="small">아직 기록된 구간이 없습니다.</div></div><label class="route-consent"><input type="checkbox" id="savePracticeRoute"/> 내 경로를 서버 전적에도 저장 (선택)</label><div class="btnrow"><button class="btn" id="startBtn">RUN START</button><button class="btn secondary" disabled="" id="finishBtn">FINISH RUN</button></div>
+<button class="btn secondary" id="resetBtn">기록 초기화</button>
+<div class="notice">안전 안내: 휴대폰 화면을 보며 달리지 마세요. 보행자와 차량을 피하고, 안전한 장소에서만 사용하세요. GPS 오차로 거리가 달라질 수 있습니다.</div>
+</section><div class="screen-nav"><button class="btn secondary" id="gameBack" type="button">로비로 돌아가기</button></div></div>
+<div class="screen hidden" id="screen-result"><div class="eyebrow">MATCH REPORT</div><h1>RUN<br/><em>COMPLETE.</em></h1><p class="sub" id="resultCaption">러닝 결과를 확인하세요.</p><section class="card">
+<div class="section-head"><strong>03 / 매치 결과</strong><span class="small">MATCH REPORT</span></div>
+<div class="matchrow"><div class="avatar">🏃</div><div class="matchtext"><b id="resultTitle">아직 완료된 경기가 없어요</b><div id="resultText">러닝을 완료하면 내 기록이 여기에 표시됩니다.</div></div><span class="tag" id="resultTag">READY</span></div>
+<div id="resultReveal" class="result-reveal" aria-live="polite"><div id="revealMine" class="reveal-line hidden">MY SCORE <b id="revealMineValue">0</b></div><div id="revealOther" class="reveal-line hidden">OPPONENT <b id="revealOtherValue">0</b></div><div id="revealVerdict" class="reveal-verdict hidden">RESULT</div></div>
+</section><section class="card"><div class="section-head"><strong>경기 경로</strong><span class="small">MAP</span></div><p class="small" id="resultMapInfo">경로가 저장된 경기는 지도에서 확인할 수 있습니다.</p><div id="resultMap" class="arena-map"></div></section><div class="screen-nav"><button class="btn secondary" id="resultLobby" type="button">로비로 돌아가기</button><button class="btn secondary" id="resultRecords" type="button">내 기록 보기</button></div></div>
+<div class="opponent-intro hidden" id="opponentIntro" role="status"><div class="opponent-intro-card"><div class="small">MATCH FOUND · 상대 플레이어</div><img id="opponentIntroPhoto" src="user_icon.png" alt="상대 프로필"/><strong id="opponentIntroName">러너</strong><p>매칭 성공! 경기 시간을 선택하세요.</p><button class="btn secondary" id="opponentIntroClose" type="button">계속하기</button></div></div><div class="screen hidden" id="screen-negotiate"><div class="eyebrow">MATCH FOUND</div><h1>TIME <em>AGREEMENT.</em></h1><p class="sub">서로 원하는 러닝 시간을 선택하세요. 두 선택의 평균으로 경기합니다.</p><section class="card"><div class="section-head"><strong>경기 시간 선택</strong><span class="small" id="negRound">1차 협상</span></div><label for="desiredMinutes">희망 경기 시간</label><select id="desiredMinutes"></select><button class="btn" id="submitMinutes">시간 확정</button><div class="notice" id="negStatus">상대 플레이어의 선택을 기다립니다.</div><div class="hidden" id="negActions"><button class="btn" id="retryNeg">재협상하기</button><button class="btn secondary" id="cancelNeg">매칭 취소</button></div></section></div>
+<div class="screen hidden" id="screen-ready"><div class="eyebrow">READY CHECK</div><h1>READY <em>TO RUN?</em></h1><p class="sub" id="agreedTime">최종 경기 시간을 확인하세요.</p><section class="card"><div class="notice" id="readyStatus">두 플레이어의 준비를 기다립니다.</div><label class="route-consent"><input type="checkbox" id="shareRoute"/> 경기 후 상대와 내 경로 공유 (선택, 기본 꺼짐)</label><button class="btn" id="readyBtn">READY</button><button class="btn secondary" id="readyCancel">매칭 취소</button></section></div>
+<div class="screen hidden" id="screen-rules"><div class="eyebrow">GAME GUIDE</div><h1>ARENA <em>RULES.</em></h1><section class="card rules"><h3>01 · 시간 협상</h3><p>매칭 후 각자 5~60분 사이에서 5분 단위로 선택합니다. 평균을 경기 제한시간으로 정합니다. 차이가 15분을 넘으면 최대 2회 재협상하거나 취소할 수 있습니다.</p><h3>02 · READY</h3><p>양쪽이 최종 시간을 확인하고 READY를 누르면 3초 카운트다운 후 서버 기준으로 동시에 경기를 시작합니다.</p><h3>03 · 점수 공식</h3><p><strong>S = 100 × D × (0.7 + 0.3 × min(V ÷ 12, 1))</strong></p><p>D: 거리(km), V: 평균 속도(km/h). 거리 비중 70%, 속도 보너스 최대 30%. 최종 점수는 반올림합니다.</p><h3>04 · 승패</h3><p>시간 종료 시 점수가 높은 플레이어 승리, 같으면 무승부입니다. 경기 중 FINISH RUN을 누르면 점수에 관계없이 즉시 기권 패배하며, 두 플레이어의 점수는 모두 표시됩니다.</p><h3>05 · 연결 문제</h3><p>경기 중 연결이 끊기면 15초간 재접속을 기다립니다. 재접속 실패 시 기권으로 처리합니다. 안전을 위해 달리기는 언제든 중단할 수 있습니다.</p><h3>06 · 결과 연출</h3><p>내 점수 → 상대 점수 → 승리/패배/무승부 순서로 공개합니다.</p><div class="notice">GPS 측정에는 브라우저 위치 권한과 지원되는 위치 환경이 필요합니다. 학교 컴퓨터에서는 위치 기능이 제한될 수 있습니다. GPS 오차로 점수가 달라질 수 있으며, 달리면서 화면을 조작하지 마세요.</div></section><button class="btn secondary" id="rulesBack">로비로 돌아가기</button></div>
+<div class="screen hidden" id="screen-nickname"><div class="eyebrow">WELCOME RUNNER</div><h1>CHOOSE YOUR <em>NAME.</em></h1><section class="card"><p class="sub">로그인 아이디와 별개로 표시되는 닉네임입니다. 여러 언어를 사용할 수 있습니다.</p><label for="firstNickname">닉네임</label><input id="firstNickname" maxlength="24" placeholder="예: 초록러너"/><button class="btn" id="saveFirstNickname">시작하기</button><div class="notice" id="nicknameError"></div></section></div>
+<div class="screen hidden" id="screen-profile"><div class="eyebrow">MY PAGE</div><h1>MY <em>PROFILE.</em></h1><section class="card"><div class="profile-head"><img id="profilePreview" src="user_icon.png" alt="기본 프로필"/><div><b id="profileDisplay">게스트</b><div class="small" id="profileId">ID · GUEST</div></div></div><label>프로필 사진</label><div class="btnrow"><button class="btn secondary" id="photoUploadBtn">이미지 업로드</button><button class="btn secondary" id="photoCameraBtn">사진 촬영</button><button class="btn secondary" id="photoResetBtn">기본 프로필</button></div><input type="file" id="photoFile" accept="image/*" class="hidden"/><input type="file" id="photoCamera" accept="image/*" capture="user" class="hidden"/><label for="editNickname">닉네임 변경</label><input id="editNickname" maxlength="24"/><button class="btn" id="saveProfile">프로필 저장</button><div id="profileMessage" class="notice">프로필을 편집할 수 있습니다.</div></section><div class="screen-nav"><button class="btn secondary" id="profileSettings">설정</button><button class="btn secondary" id="profileBack">로비로</button></div></div>
+<div class="screen hidden" id="screen-settings"><h1>설정</h1><p class="sub">서버 주소와 연결 상태를 관리하세요.</p><section class="card"><div class="section-head"><strong>05 / 서버 설정</strong><span class="small">NETWORK</span></div>
+<div class="section-head"><strong>화면 및 계정</strong></div><label for="themeSelect">화면 테마</label><select id="themeSelect"><option value="dark">다크 모드</option><option value="light">화이트 모드</option></select><label for="fontSizeSelect">글꼴 크기</label><select id="fontSizeSelect"><option value="90">작게</option><option value="100">기본</option><option value="115">크게</option><option value="130">매우 크게</option></select><div class="btnrow"><button class="btn secondary" id="settingsLogout">로그아웃</button><button class="btn secondary" id="deleteAccount">계정 삭제</button></div><label for="changeId">새 로그인 아이디</label><input id="changeId" placeholder="영문·숫자·밑줄"/><button class="btn secondary" id="saveId">아이디 변경</button><label for="changePassword">새 비밀번호 (8자 이상)</label><input type="password" id="changePassword" autocomplete="new-password"/><button class="btn secondary" id="savePassword">비밀번호 변경</button><div id="accountSettingsStatus" class="notice">계정 변경은 로그인 후 사용할 수 있습니다.</div><hr/><label class="small" for="serverUrl">노트북 서버 WebSocket 주소</label>
+<input autocomplete="off" id="serverUrl" placeholder="ws://192.168.0.10:8080"/>
+<div class="btnrow"><button class="btn secondary" id="saveServer">주소 저장</button><button class="btn secondary" id="testServer">연결 테스트</button></div>
+<div class="notice">주소가 없거나 서버가 꺼져 있으면 온라인 매칭에만 오류가 표시됩니다. HTTPS로 게시한 앱에서는 wss:// 서버가 필요할 수 있습니다.</div>
+<div class="section-head"><strong>송수신 로그</strong><span class="small">CLIENT ↔ SERVER</span></div><div class="netlog" id="netLog">아직 통신 없음</div>
+</section><div class="screen-nav"><button class="btn secondary" id="settingsBack" type="button">이전 화면으로</button></div></div>
+<div class="screen hidden" id="screen-records"><div class="eyebrow">RUN HISTORY</div><h1>YOUR<br/><em>RECORDS.</em></h1><p class="sub">이 브라우저에 저장된 최근 러닝 기록입니다.</p><section class="card">
+<div class="section-head"><strong>04 / 내 기록</strong><span class="small">LOCAL HISTORY</span></div>
+<div class="records" id="records"><div class="small">아직 저장된 기록이 없습니다.</div></div>
+</section><section class="card"><h3>선택한 경기 상세 기록</h3><div id="recordDetail" class="small">전적을 선택하면 상세 기록을 확인할 수 있습니다.</div><div id="recordMap" class="arena-map"></div></section><div class="screen-nav"><button class="btn secondary" id="recordsBack" type="button">로비로 돌아가기</button></div></div></main><nav id="bottomNav" class="bottom-nav hidden" aria-label="메인 탐색"><button id="navRecords" type="button"><span class="nav-icon">▤</span><small>내 전적</small></button><button id="navHome" type="button"><span class="nav-icon">⌂</span><small>홈</small></button><button id="navProfile" type="button"><span class="nav-icon">♙</span><small>내 페이지</small></button></nav>
+
+<!-- App-wide screen transition loader (no server requests) -->
+<div id="arenaLoading" class="arena-loading" aria-live="polite" aria-hidden="true">
+  <div class="arena-loading-content" role="status">
+    <img class="arena-loading-logo" src="main_logo.png" alt=""/>
+    
+    
+  </div>
+</div>
+<div id="welcomeOverlay" class="welcome-overlay hidden"><div class="welcome-box"><div class="eyebrow">WELCOME TO RUNNING ARENA</div><h2>경기 규칙 안내</h2><div id="welcomeLines"></div><button class="btn secondary hidden" id="closeWelcome">✕ 닫기</button><div class="small">화면을 누르면 다음 안내가 나타납니다.</div></div></div>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoT6MZwCkW9jF8=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="app.js"></script>
+</body>
+</html>
