@@ -15,8 +15,9 @@ async function hashPassword(password,salt=randomBytes(16).toString('hex')){const
 async function verifyPassword(password,user){const hash=await scrypt(password,user.salt,64);const saved=Buffer.from(user.hash,'hex');return saved.length===hash.length&&timingSafeEqual(saved,hash)}
 function publicUser(user){return {username:user.username,nickname:user.nickname||user.username,photo:user.photo||null,created_at:user.created_at}}
 function issueToken(ws,user){const token=randomBytes(32).toString('hex');sessions.set(token,{username:user.username,ws,expires:Date.now()+12*60*60*1000});return token}
-function sessionFor(ws,token){const entry=sessions.get(token);if(!entry)return null;if(entry.expires<Date.now()||entry.ws!==ws){sessions.delete(token);return null}return users[entry.username.toLowerCase()]||null}
+function sessionFor(ws,token){const entry=sessions.get(token);if(!entry)return null;if(entry.expires<Date.now()){sessions.delete(token);return null}if(entry.ws&&entry.ws!==ws&&entry.ws.readyState===WebSocket.OPEN)return null;entry.ws=ws;return users[entry.username.toLowerCase()]||null}
 function clearSocketSessions(ws){for(const [token,entry] of sessions)if(entry.ws===ws)sessions.delete(token)}
+function detachSocketSessions(ws){for(const entry of sessions.values())if(entry.ws===ws)entry.ws=null}
 const forbidden=['씨발','새끼','시발','병신','좆','장애','게이','최민서'];
 function validNickname(name){return typeof name==='string'&&name.trim().length>=2&&[...name.trim()].length<=24&&!forbidden.some(x=>name.replace(/\s/g,'').toLowerCase().includes(x))&&!/[<>\u0000-\u001f]/.test(name)}
 const historyFile=path.join(dataDir,'history.json');let history=Object.create(null);let historyQueue=Promise.resolve();
@@ -170,7 +171,7 @@ wss.on('connection',ws=>{
     }
 
   });
-  ws.on('close',()=>{disconnectPlayer(ws);players.delete(ws);clearSocketSessions(ws);attempts.delete(ws)});
+  ws.on('close',()=>{disconnectPlayer(ws);players.delete(ws);detachSocketSessions(ws);attempts.delete(ws)});
   ws.on('error',err=>console.error('WebSocket:',err.message));
 });
 (async()=>{try{history=JSON.parse(await readFile(historyFile,'utf8'))}catch(e){if(e.code!=='ENOENT')throw e}try{users=JSON.parse(await readFile(usersFile,'utf8'))}catch(e){if(e.code!=='ENOENT')throw e}const {createServer}=require('node:http');const http=createServer((req,res)=>{res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8'});res.end('Running Arena WebSocket server')});http.on('upgrade',(req,socket,head)=>{wss.handleUpgrade(req,socket,head,ws=>wss.emit('connection',ws,req))});http.listen(port,'0.0.0.0',()=>console.log(`Running Arena server ready on ws://0.0.0.0:${port}`))})().catch(e=>{console.error('Cannot load user database:',e);process.exit(1)});
